@@ -1,0 +1,10 @@
+{
+  "name": "zenn.dev",
+  "packageManager": "pnpm@8.6.5",
+  "scripts": {
+    "preview": "zenn preview --port 8008"
+  },
+  "devDependencies": {
+    "zenn-cli": "0.1.150"
+  }
+}
