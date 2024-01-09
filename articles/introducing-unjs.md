@@ -62,7 +62,7 @@ UnJSのウェブサイトはパッケージ一覧とブログ記事がコンテ�
 
 シリーズを通して、現時点で次のライブラリを取り上げる予定で、順番に調査した上で記事として公開していきます。(個人的な関心や調査の必要性に基づいて対象のライブラリを選定するため、記事を公開していく過程で予定が変更される可能性があります)
 
-1. H3: Nuxtの[Server](https://nuxt.com/docs/getting-started/server)の実装でH3の関数を用いるため
+1. H3: Nuxtの[Server](https://nuxt.com/docs/getting-started/server)の実装でH3の関数を用いるため => 「[H3 (unjs/h3)について](./introducing-unjs-h3)」で記事を公開しました。
 2. radix3: H3の高速なルーティングの理由とどのようなルーティングの機能が使えるのか理解するため
 3. unenv
 4. Nitro
