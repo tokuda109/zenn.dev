@@ -4,6 +4,7 @@ emoji: "😍"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["nuxtjs", "nuxt3", "unjs"]
 published: true
+publication_name: "comm_vue_nuxt"
 ---
 
 ## シリーズ記事の概要

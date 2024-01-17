@@ -4,6 +4,7 @@ emoji: "⚡"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["h3", "nuxtjs", "nuxt3", "unjs"]
 published: true
+publication_name: "comm_vue_nuxt"
 ---
 
 ## この記事について
@@ -510,3 +511,4 @@ Fastifyがベンチマーク計測ツールを提供していて、[計測結果
 ## 参考
 
 * [公式ドキュメンテーションサイト](https://h3-7i3.pages.dev/) (注意: まだ作業中で仮のホスト先の気がするので将来的に変更されそうです)
+
