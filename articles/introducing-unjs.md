@@ -33,7 +33,7 @@ Vue.jsのバージョン2系のサポートは2023年12月31日に終了し、Nu
 ---|---|---
 H3 | 軽量で高速なHTTPサーバー | [H3 (unjs/h3)について](./introducing-unjs-h3)
 radix3 | 基数木に基づいて実装された高速なルーター | [radix3 (unjs/radix3)について](./introducing-unjs-radix3)
-unenv | 特定の実行環境に依存しないユニバーサルなJavaScriptコードに変換するライブラリ | unenv (unjs/unenv)について
+unenv | 特定の実行環境に依存しないユニバーサルなJavaScriptコードに変換するライブラリ | [unenv (unjs/unenv)について](./introducing-unjs-unenv)
 Nitro | どの環境でも動作させることが可能なWebサーバーを構築するライブラリ | Nitro (unjs/nitro)について
 ofetch | APIクライアント | ofetch (unjs/ofetch)について
 Consola | console | Consola (unjs/consola)について
