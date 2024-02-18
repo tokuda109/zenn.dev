@@ -14,7 +14,7 @@ publication_name: "comm_vue_nuxt"
 
 ## unenvの特徴
 
-unenv([unjs/unenv](https://github.com/unjs/unenv))は、ブラウザ、Node.js、Workers等の特定の実行環境に依存しないユニバーサルなJavaScriptコードに変換するためのユーティリティライブラリです。RollupやWebpack等のバンドルツールと組み合わせてビルドした成果物
+unenv([unjs/unenv](https://github.com/unjs/unenv))は、ブラウザ、Node.js/Deno/Bun、Workers等の特定の実行環境に依存しないユニバーサルなJavaScriptコードに変換するためのユーティリティライブラリです。基本的にはRollupやWebpack等のビルドツールと組み合わせて使い、実行環境に依存しないJavaScriptコードに変換した成果物を生成することができます。unenvがあることで、同じくUnJSプロジェクトから提供されているH3やNitroがどのような実行環境でも動作させることが可能になっています。
 
 unenvの主要な特徴として、次のものがあります:
 
@@ -24,14 +24,18 @@ unenvの主要な特徴として、次のものがあります:
 
 ## ユースケース
 
-具体的にどのようなことができるのか
-unenvは、UnJSのいくつかのライブラリで実際に使われているため紹介します。
+ここまでの説明だけで、unenvをどのように使うことができるのか想像しにくいと思います。H3とNitroはunenvを使っているため、ここではH3とNitroの事例を基にしてどのような使われ方をしているのか紹介します。
 
 ### H3のHTTPリクエストとレスポンス
 
-H3はサーバーレス環境、エッジ環境、Node.js/Bun/Deno等の様々なJavaScript実行環境で動作する高速なHTTPサーバーです。Node.jsの`http`モジュールが提供している`IncomingMessage`や`OutgoingMessage`と、Node.js以外のFetch APIに準拠している実行環境が提供している`Request`と`Response`は互換性がありません。Node.js向けに実装した
-H3はこれを解消するためにアダプタという機能を提供していて、アダプタによってNode.jsとそれ以外の実行環境の差を吸収しています。
-具体的にはH3サーバーに登録したイベントハンドラ内で処理されるリクエストとレスポンスは
+H3はサーバーレス環境、エッジ環境、Node.js/Bun/Deno等の様々なJavaScript実行環境で動作する高速なHTTPサーバーです。Node.jsの`http`モジュールが提供している`IncomingMessage`や`OutgoingMessage`と、Node.js以外のFetch APIに準拠している実行環境が提供している`Request`や`Response`と互換性がありません。そのため、Node.js向けに実装したアプリケーションを他の実行環境に移植するには一から実装をやり直す必要があります。
+
+H3は実装したアプリケーションをどのような実行環境でも動作させるための機能としてアダプタを提供していて、Node.jsの`http`モジュールとWeb標準APIに準拠した実行環境の2つのアダプタがあります。
+実装したアプリケーションはアダプタを差し替えるだけで実行環境を移植することができます。
+
+:::message
+H3の詳細については、同じシリーズ記事の「[H3 (unjs/h3)について](./introducing-unjs-h3)」という記事で紹介しています
+:::
 
 #### Node.jsの処理
 
@@ -97,15 +101,17 @@ async function toWebHandler(app, req) {
 
 Fetch APIに準拠している実行環境
 
-:::message
-H3の詳細については、同じシリーズ記事の「[H3 (unjs/h3)について](./introducing-unjs-h3)」という記事で紹介しています
-:::
-
 ### Nitro
+
+NitroはH3と同様、様々な実行環境で動かすことが可能なウェブサーバーを構築するためのライブラリになります。
+
+:::message
+Nitroは、この記事では詳細に触れず、別の記事で調査をする予定です。
+:::
 
 ## プリセット
 
-プリセットは特定の実行環境向けにunenvで用意しているコンフィグになります。
+プリセットは、Node.jsやDeno、Cloudflare WorkersやVercelのEdge Runtime等のそれぞれの実行環境向けに、unenvが提供している設定になります。RollupやWebpack等のビルドツールと組み合わせてビルドすることで、指定した実行環境向けに最適化された成果物が生成されます。
 
 ```typescript
 interface Environment {
@@ -118,20 +124,35 @@ interface Environment {
 interface Preset extends Partial<Environment> {}
 ```
 
-* alias
-* inject
-* polyfill
-* external
+プリセットの型定義は`alias`、`inject`、`polyfill`、`external`の4つのプロパティを持っています:
+
+* **alias**: 指定したモジュールをインポートする際のパスを指定します。バンドル時に指定したパスからインポートします。
+* **inject**: 
+* **polyfill**: モジュールを指定すると、実行環境に不足している機能やAPIを保管するためのコードとしてバンドルされます。
+* **external**: 指定したモジュールをバンドル対象から除外して、外部依存として参照するように変換します。
+
+これらの4つのプロパティは、
 
 ### プリセット一覧
 
+unenvが提供しているプリセットを紹介します。
+
 #### node
 
-`node`プリセットは、Node.js向けの設定で、
+`node`プリセットはNode.js向けの設定で、次の対応がされています:
+
+* Fetch API対応
+* Node.jsのビルトインモジュールの依存をバンドル対象から除外
+
+`node`プリセットには、`node-fetch`や`isomorphic-fetch`等のFetch API対応のNPMパッケージをunenvが提供しているモックへのエイリアスを貼っています。Node.jsがコアモジュールとしてFetch API
 
 #### nodeless
 
+`nodeless`プリセットは、
+
 #### deno
+
+`deno`プリセットは、
 
 #### cloudflare
 
