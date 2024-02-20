@@ -14,7 +14,7 @@ publication_name: "comm_vue_nuxt"
 
 ## unenvの特徴
 
-unenv([unjs/unenv](https://github.com/unjs/unenv))は、ブラウザ、Node.js/Deno/Bun、Workers等の特定の実行環境に依存しないユニバーサルなJavaScriptコードに変換するためのユーティリティライブラリです。基本的にはRollupやWebpack等のビルドツールと組み合わせて使い、実行環境に依存しないJavaScriptコードに変換した成果物を生成することができます。unenvがあることで、同じくUnJSプロジェクトから提供されているH3やNitroがどのような実行環境でも動作させることが可能になっています。
+unenv([unjs/unenv](https://github.com/unjs/unenv))は、ブラウザ、Node.js/Deno/Bun、Workers等の特定の実行環境に依存しないユニバーサルなJavaScriptコードに変換するためのユーティリティライブラリです。基本的にはRollupやWebpack等のビルドツールと組み合わせて使い、実行環境に依存しないJavaScriptコードを生成することができます。unenvと同じくUnJSプロジェクトから提供されているH3やNitroは内部的にunenvを使っていて、どのような実行環境でも動作させることが可能になっています。
 
 unenvは主要な機能として次の2つを提供しています:
 
@@ -23,26 +23,23 @@ unenvは主要な機能として次の2つを提供しています:
 
 ## ユースケース
 
-ここまでの説明だけで、unenvをどのように使うことができるのか想像しにくいと思います。H3とNitroはunenvを使っているため、ここではH3とNitroの事例を基にしてどのような使われ方をしているのか紹介します。
+ここまでの説明だけで、unenvをどのように使うことができるのか想像しにくいと思います。先ほどH3とNitroはunenvを使っていると述べましたが、ここではH3とNitroの事例を基にしてどのような使われ方をしているのか紹介します。
 
 ### H3のHTTPリクエストとレスポンス
 
-H3はサーバーレス環境、エッジ環境、Node.js/Bun/Deno等の様々なJavaScript実行環境で動作する高速なHTTPサーバーです。Node.jsの`http`モジュールが提供している`IncomingMessage`や`OutgoingMessage`と、Node.js以外のFetch APIに準拠している実行環境が提供している`Request`や`Response`と互換性がありません。そのため、Node.js向けに実装したアプリケーションを他の実行環境に移植するには一から実装をやり直す必要があります。
-
-H3は実装したアプリケーションをどのような実行環境でも動作させるための機能としてアダプタを提供していて、Node.jsの`http`モジュールとWeb標準APIに準拠した実行環境の2つのアダプタがあります。
-実装したアプリケーションはアダプタを差し替えるだけで実行環境を移植することができます。
-
-1つめとして、H3の例を紹介します。H3はサーバーレス環境、エッジ環境、Node.js/Bun/Deno等の様々なJavaScript実行環境で動作する高速なHTTPサーバーです。Node.jsの`http`モジュールが提供している`IncomingMessage`や`OutgoingMessage`と、Node.js以外のFetch APIに準拠している実行環境が提供している`Request`と`Response`は互換性がありません。
-Node.js向けに実装したアプリケーションは、そのままではFetch APIに準拠している実行環境で動かすことができません。H3はこれを解消するためにアダプタという機能を提供していて、アダプタによってNode.jsとそれ以外の実行環境の差を吸収しています。
-このアダプタ内の処理で、unenvが提供している`IncomingMessage`と`OutgoingMessage`と同じAPIが提供されているが、より軽量な実装になっているモックが使われています。このモックを使うことで`http`モジュールが提供している大きなオブジェクトを初期化しなくてすみ、パフォーマンスへの影響をなくしています。
+1つめとして、H3の例を紹介します。
+H3はサーバーレス環境、エッジ環境、Node.js/Bun/Deno等の様々なJavaScript実行環境で動作する高速なHTTPサーバーです。Node.jsの`http`モジュールが提供している`IncomingMessage`や`OutgoingMessage`は、Node.js以外のFetch APIに準拠している実行環境が提供している`Request`や`Response`と互換性がありません。Node.js向けに実装したアプリケーションは、そのままではFetch APIに準拠している実行環境で動かすことができません。
+H3はこれを解消するためにアダプタという機能を提供しています。アダプタによってNode.jsとそれ以外の実行環境の差を吸収していて、実装したアプリケーションはアダプタを差し替えるだけで別の実行環境で動作させることが可能になっています。
 
 :::message
 H3の詳細については、同じシリーズ記事の「[H3 (unjs/h3)について](./introducing-unjs-h3)」という記事で紹介しています
 :::
 
-#### Node.jsの処理
+#### モックによる`IncomingMessage`と`OutgoingMessage`の軽量実装
 
-H3を使ったHTTPサーバーの基本的な実装は次のようになります。
+このアダプタ内の処理で、unenvが提供している`IncomingMessage`と`OutgoingMessage`と同じAPIが提供されているが、より軽量な実装になっているモックが使われています。このモックを使うことで`http`モジュールが提供している大きなオブジェクトを初期化しなくてすみ、パフォーマンスへの影響をなくしています。
+
+実際にNode.js向けの実装とFetch APIに準拠している実行環境向けでどのような違いがあるのか紹介します。まずはH3を使ったNode.js向けのHTTPサーバーの基本的な実装は次のようになります:
 
 ```javascript
 import { createServer } from "node:http";
@@ -55,7 +52,7 @@ app.use("/", eventHandler(() => "Hello world!"));
 createServer(toNodeListener(app)).listen(8080);
 ```
 
-`app`インスタンスを作成し、`toNodeListener`に渡します。この時に`toNodeListener`内で次のような処理が行われます。
+`app`インスタンスを作成し、`toNodeListener`関数に渡します。`toNodeListener`はNode.jsで動作させるときに使うアダプタで、`toNodeListener`内で次のような処理が行われます。
 
 ```javascript
 function toNodeListener(app) {
@@ -67,10 +64,9 @@ function toNodeListener(app) {
 }
 ```
 
-`toNodeListener`内の`req`と`res`は`http`モジュールで初期化された`IncomingMessage`と`OutgoingMessage`のオブジェクトになります。このオブジェクトを基に`event`オブジェクトを作成し、イベントハンドラに渡されます。
-`IncomingMessage`と`OutgoingMessage`のオブジェクトを`console`等でデバッグしたことがある方ならご存知だと思いますが、これらは凄くデータサイズが大きいオブジェクトになります。
+`toNodeListener`関数内の`req`と`res`は`http`モジュールで初期化された`IncomingMessage`と`OutgoingMessage`のオブジェクトが渡ってきます。このオブジェクトを`createEvent`関数に渡して`event`オブジェクトを作成し、イベントハンドラに渡しています。`IncomingMessage`と`OutgoingMessage`のオブジェクトを`console`等でデバッグしたことがある方ならご存知だと思いますが、これらは凄くデータサイズが大きいオブジェクトになります。
 
-#### Fetch APIに準拠している実行環境の処理
+次にFetch APIに準拠している実行環境向けの実装は次のようになります:
 
 ```javascript
 import { createApp, eventHandler, toWebHandler } from "h3";
@@ -88,6 +84,8 @@ export default {
 };
 ```
 
+`app`インスタンスを作成するところまでは同じですが、ここでは`toWebHandler`関数を使っています。この関数はFetch APIに準拠している実行環境で動作させるときに使うアダプタになります。`toWebHandler`関数内で次のような処理が行われます。
+
 ```javascript
 import { IncomingMessage } from "unenv/runtime/node/http/_request";
 import { ServerResponse } from "unenv/runtime/node/http/_response";
@@ -96,13 +94,18 @@ async function toWebHandler(app, req) {
   const nodeReq = new IncomingMessage();
   const nodeRes = new ServerResponse(nodeReq);
 
-  const event = createEvent(req, res);
+  const event = createEvent(nodeReq, nodeRes);
+
+  event._method = (request.method || "GET").toUpperCase();
+  event._path = req.path;
 
   await app.handler(event);
 }
 ```
 
-Fetch APIに準拠している実行環境
+`toWebHandler`関数内の`req`は、Fetch APIの`Request`型のオブジェクトが渡ってきます。`createEvent`関数に渡す引数は、`unenv`で提供されている`IncomingMessage`と`ServerResponse`を初期化したものを渡しています。これらは`http`モジュールの`IncomingMessage`と`OutgoingMessage`と基本的に同じインターフェースですが、不要なプロパティは簡略化されています。
+
+軽量なモックに差し替えることで`app.handler`内の処理はどちらも同じインターフェースによるプロパティを持つオブジェクトを扱うことができ、Fetch APIに準拠している実行環境で`http`モジュールの`IncomingMessage`と`OutgoingMessage`の大きなオブジェクトを作成するための負荷を不要にしています。
 
 ### Nitro
 
