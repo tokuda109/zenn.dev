@@ -16,11 +16,10 @@ publication_name: "comm_vue_nuxt"
 
 unenv([unjs/unenv](https://github.com/unjs/unenv))は、ブラウザ、Node.js/Deno/Bun、Workers等の特定の実行環境に依存しないユニバーサルなJavaScriptコードに変換するためのユーティリティライブラリです。基本的にはRollupやWebpack等のビルドツールと組み合わせて使い、実行環境に依存しないJavaScriptコードに変換した成果物を生成することができます。unenvがあることで、同じくUnJSプロジェクトから提供されているH3やNitroがどのような実行環境でも動作させることが可能になっています。
 
-unenvの主要な特徴として、次のものがあります:
+unenvは主要な機能として次の2つを提供しています:
 
-* ブラウザ、Node.js、Workers等の様々なJavaScript実行環境で動作させることが可能な機能を提供
-* 主要なJavaScript実行環境用にプリセットとしてRollupやWebpack等のバンドラの設定を用意しているため、開発環境に導入することが容易
-* JavaScript実行環境の依存をなくすために、モックやポリフィルを提供
+* **プリセット**: RollupやWebpack等のバンドラーと組み合わせて使う設定をプリセットとして提供していて、Node.js/Deno、Vercel、Cloudflare Workers等の主要な実行環境向けの設定を用意している
+* **モック、ポリフィル**: 実行環境毎の差を埋めるためのモックやポリフィル等の実装を用意している
 
 ## ユースケース
 
@@ -32,6 +31,10 @@ H3はサーバーレス環境、エッジ環境、Node.js/Bun/Deno等の様々�
 
 H3は実装したアプリケーションをどのような実行環境でも動作させるための機能としてアダプタを提供していて、Node.jsの`http`モジュールとWeb標準APIに準拠した実行環境の2つのアダプタがあります。
 実装したアプリケーションはアダプタを差し替えるだけで実行環境を移植することができます。
+
+1つめとして、H3の例を紹介します。H3はサーバーレス環境、エッジ環境、Node.js/Bun/Deno等の様々なJavaScript実行環境で動作する高速なHTTPサーバーです。Node.jsの`http`モジュールが提供している`IncomingMessage`や`OutgoingMessage`と、Node.js以外のFetch APIに準拠している実行環境が提供している`Request`と`Response`は互換性がありません。
+Node.js向けに実装したアプリケーションは、そのままではFetch APIに準拠している実行環境で動かすことができません。H3はこれを解消するためにアダプタという機能を提供していて、アダプタによってNode.jsとそれ以外の実行環境の差を吸収しています。
+このアダプタ内の処理で、unenvが提供している`IncomingMessage`と`OutgoingMessage`と同じAPIが提供されているが、より軽量な実装になっているモックが使われています。このモックを使うことで`http`モジュールが提供している大きなオブジェクトを初期化しなくてすみ、パフォーマンスへの影響をなくしています。
 
 :::message
 H3の詳細については、同じシリーズ記事の「[H3 (unjs/h3)について](./introducing-unjs-h3)」という記事で紹介しています
