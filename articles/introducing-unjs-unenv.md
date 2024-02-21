@@ -12,6 +12,14 @@ publication_name: "comm_vue_nuxt"
 この記事は、UnJSの主要なライブラリを調査していくシリーズ記事の1つになります。
 シリーズ記事の概要や今後公開される予定の記事の確認は[こちらの記事](./introducing-unjs)を参照してください。今回はunenvというライブラリについて紹介します。
 
+### 前提条件
+
+この記事の説明で使うライブラリのバージョンは次のものを使っています:
+
+* `unenv`: v1.9.0
+* `H3`: v1.10.2
+* `Nitro`: v2.8.1
+
 ## unenvの特徴
 
 unenv([unjs/unenv](https://github.com/unjs/unenv))は、ブラウザ、Node.js/Deno/Bun、Workers等の特定の実行環境に依存しないユニバーサルなJavaScriptコードに変換するためのユーティリティライブラリです。基本的にはRollupやWebpack等のビルドツールと組み合わせて使い、実行環境に依存しないJavaScriptコードを生成することができます。unenvと同じくUnJSプロジェクトから提供されているH3やNitroは内部的にunenvを使っていて、どのような実行環境でも動作させることが可能になっています。
@@ -27,9 +35,8 @@ unenvは主要な機能として次の2つを提供しています:
 
 ### H3のHTTPリクエストとレスポンス
 
-1つめとして、H3の例を紹介します。
 H3はサーバーレス環境、エッジ環境、Node.js/Bun/Deno等の様々なJavaScript実行環境で動作する高速なHTTPサーバーです。Node.jsの`http`モジュールが提供している`IncomingMessage`や`OutgoingMessage`は、Node.js以外のFetch APIに準拠している実行環境が提供している`Request`や`Response`と互換性がありません。Node.js向けに実装したアプリケーションは、そのままではFetch APIに準拠している実行環境で動かすことができません。
-H3はこれを解消するためにアダプタという機能を提供しています。アダプタによってNode.jsとそれ以外の実行環境の差を吸収していて、実装したアプリケーションはアダプタを差し替えるだけで別の実行環境で動作させることが可能になっています。
+これを解決するために、H3はアダプタという機能を提供しています。アダプタによってNode.jsとそれ以外の実行環境の差を吸収していて、アダプタを差し替えるだけで、実装したアプリケーションを別の実行環境で動作させることが可能になっています。
 
 :::message
 H3の詳細については、同じシリーズ記事の「[H3 (unjs/h3)について](./introducing-unjs-h3)」という記事で紹介しています
@@ -110,6 +117,17 @@ async function toWebHandler(app, req) {
 ### Nitro
 
 NitroはH3と同様、様々な実行環境で動かすことが可能なウェブサーバーを構築するためのライブラリになります。
+Nitroで作成するウェブサーバーをNode.jsで動かす必要がない場合は、`nitro.config.ts`の設定ファイルに次のように指定します:
+
+```typescript:nitro.config.ts
+export default defineNitroConfig({
+  node: false,
+});
+```
+
+このように指定することで、ビルドする際にNode.jsに依存する箇所を、unenvで提供されているモックに可能な限り差し替えます。先程のH3の事例と同様、Node.jsの実装を極力モックに差し替え、よりモダンで標準に沿った実装の方に揃えています[^1]。
+
+[^1]: Nitroの実装を見るとNode.jsのプリセット、Nitroのビルトインプリセット、ユーザーが設定ファイルで指定するプリセットの順で優先度が高くなるように実装されていることが分かります。 ([ソースコード](https://github.com/unjs/nitro/blob/b53e00191d0752c7ae7463a907f0858c8bb8182e/src/rollup/config.ts#L59))
 
 :::message
 Nitroは、この記事では詳細に触れず、別の記事で調査をする予定です。
@@ -130,7 +148,7 @@ interface Environment {
 interface Preset extends Partial<Environment> {}
 ```
 
-プリセットの型定義は`alias`、`inject`、`polyfill`、`external`の4つのプロパティを持っています:
+プリセットの型定義には`alias`、`inject`、`polyfill`、`external`の4つのプロパティを持っています:
 
 * **alias**: 指定したモジュールをインポートする際のパスを指定します。バンドル時に指定したパスからインポートします。
 * **inject**: 
@@ -150,7 +168,7 @@ unenvが提供しているプリセットを紹介します。
 * Fetch API対応
 * Node.jsのビルトインモジュールの依存をバンドル対象から除外
 
-`node`プリセットには、`node-fetch`や`isomorphic-fetch`等のFetch API対応のNPMパッケージをunenvが提供しているモックへのエイリアスを貼っています。Node.jsがコアモジュールとしてFetch API
+`node`プリセットは、`node-fetch`や`isomorphic-fetch`等のFetch API対応のNPMパッケージをunenvが提供しているモックに差し替えています。
 
 #### nodeless
 
@@ -166,9 +184,9 @@ unenvが提供しているプリセットを紹介します。
 
 #### vercel
 
-`vercel`プリセットは、Vercelの[Edge Runtime](https://vercel.com/docs/functions/runtimes/edge-runtime)向けの設定です。`Edge Runtime`でJavaScriptを実行すると`async_hooks`、`events`、`buffer`等のコアモジュールは`node:`プリフィックスをつけてもつけなくてもインポートすることができます[^1]。
+`vercel`プリセットは、Vercelの[Edge Runtime](https://vercel.com/docs/functions/runtimes/edge-runtime)向けの設定です。`Edge Runtime`でJavaScriptを実行すると`async_hooks`、`events`、`buffer`等のコアモジュールは`node:`プリフィックスをつけてもつけなくてもインポートすることができます[^2]。
 
-[^1]: [Compatible Node.js modules - Edge Runtime](https://vercel.com/docs/functions/runtimes/edge-runtime#compatible-node.js-modules)
+[^2]: [Compatible Node.js modules - Edge Runtime](https://vercel.com/docs/functions/runtimes/edge-runtime#compatible-node.js-modules)
 
 ### プリセットの作り方
 
